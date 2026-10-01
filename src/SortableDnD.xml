@@ -3,15 +3,72 @@
         supportedPlatform="Web"
         xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
-    <name>Sortable Dn D</name>
-    <description>My widget description</description>
+    <name>Sortable DnD</name>
+    <description>Drag items between and within lists (e.g. gallery items between kanban lanes). The lists keep loading their own data; this widget only adds dragging and dropping.</description>
     <icon/>
     <properties>
         <propertyGroup caption="General">
-            <property key="sampleText" type="string" required="false">
-                <caption>Default value</caption>
-                <description>Sample text input</description>
-            </property>
+            <propertyGroup caption="Role">
+                <property key="role" type="enumeration" defaultValue="item">
+                    <caption>Role</caption>
+                    <description>Item: something that can be dragged (place it in a list item). Zone: an area items can be dropped in (place it around or inside a list).</description>
+                    <enumerationValues>
+                        <enumerationValue key="item">Item (draggable)</enumerationValue>
+                        <enumerationValue key="zone">Zone (drop target)</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="group" type="string" required="true" defaultValue="default">
+                    <caption>Group</caption>
+                    <description>Items can only be dropped in zones with the same group name.</description>
+                </property>
+                <property key="itemKey" type="expression" required="false">
+                    <caption>Item key</caption>
+                    <description>Unique key of this item, passed to the zone's On drop action (e.g. toString($currentObject/ID)).</description>
+                    <returnType type="String"/>
+                </property>
+                <property key="zoneKey" type="expression" required="false">
+                    <caption>Zone key</caption>
+                    <description>Key of this zone, passed to the On drop action as the source zone of the dragged item.</description>
+                    <returnType type="String"/>
+                </property>
+                <property key="disabled" type="expression" required="false">
+                    <caption>Disabled</caption>
+                    <description>Optional. When true, this item cannot be dragged / this zone does not accept drops.</description>
+                    <returnType type="Boolean"/>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Placement">
+                <property key="targetSelector" type="string" required="false">
+                    <caption>Attach to (CSS selector)</caption>
+                    <description>Optional. When set, the widget does not wrap its content but attaches to the closest ancestor matching this selector (e.g. .kbn-card or .kbn-lane). Lets you add drag and drop next to existing widgets without moving them.</description>
+                </property>
+                <property key="content" type="widgets" required="false">
+                    <caption>Content</caption>
+                    <description>Content that becomes draggable (item) or the drop area (zone). Leave empty when using 'Attach to'.</description>
+                </property>
+                <property key="orientation" type="enumeration" defaultValue="vertical">
+                    <caption>Orientation</caption>
+                    <description>Zone only. Direction in which the items in this zone are laid out; decides whether the drop position is computed from the vertical or horizontal pointer position.</description>
+                    <enumerationValues>
+                        <enumerationValue key="vertical">Vertical</enumerationValue>
+                        <enumerationValue key="horizontal">Horizontal</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Events">
+            <propertyGroup caption="Events">
+                <property key="onDrop" type="action" required="false">
+                    <caption>On drop</caption>
+                    <description>Zone only. Runs when an item is dropped in this zone.</description>
+                    <actionVariables>
+                        <actionVariable key="draggedKey" type="String" caption="Item key of the dragged item"/>
+                        <actionVariable key="fromZoneKey" type="String" caption="Zone key the item was dragged from (empty when it was not in a zone)"/>
+                        <actionVariable key="beforeKey" type="String" caption="Item key of the item it was dropped before (empty = at the end)"/>
+                        <actionVariable key="newIndex" type="Integer" caption="0-based position in this zone among the items currently shown, without the dragged item"/>
+                    </actionVariables>
+                </property>
+            </propertyGroup>
         </propertyGroup>
     </properties>
 </widget>

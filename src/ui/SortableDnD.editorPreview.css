@@ -1,0 +1,11 @@
+.sortablednd-preview {
+    border: 1px dashed #8a94a6;
+    border-radius: 4px;
+    padding: 4px;
+}
+
+.sortablednd-preview-label {
+    font-size: 11px;
+    color: #5b6578;
+    padding: 0 2px 4px;
+}

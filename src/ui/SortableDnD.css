@@ -1,6 +1,39 @@
-/*
-Place your custom CSS here
-*/
-.widget-hello-world {
+/* Indicator colour; override with --sortablednd-indicator on any ancestor. */
+.sortablednd-item[draggable="true"] {
+    cursor: grab;
+}
 
+.sortablednd-item[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.sortablednd-dragging {
+    opacity: 0.4;
+}
+
+.sortablednd-anchor {
+    display: none;
+}
+
+/* Drop position: a line just before the item the dragged item will be placed in front of… */
+.sortablednd-zone[data-sortable-orientation="vertical"] .sortablednd-insert-before {
+    box-shadow: 0 -3px 0 0 var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+}
+
+.sortablednd-zone[data-sortable-orientation="horizontal"] .sortablednd-insert-before {
+    box-shadow: -3px 0 0 0 var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+}
+
+/* …or, when it goes last, a line along the end of the zone. */
+.sortablednd-zone[data-sortable-orientation="vertical"].sortablednd-insert-end {
+    box-shadow: inset 0 -3px 0 0 var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+}
+
+.sortablednd-zone[data-sortable-orientation="horizontal"].sortablednd-insert-end {
+    box-shadow: inset -3px 0 0 0 var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+}
+
+.sortablednd-zone.sortablednd-over {
+    outline: 2px dashed var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+    outline-offset: -2px;
 }

@@ -46,35 +46,66 @@
  * @param {("web"|"desktop")} target
  * @returns {Properties}
  */
+const ITEM_ONLY = ["itemKey"];
+const ZONE_ONLY = ["zoneKey", "orientation", "onDrop"];
+
+/** Removes the given property keys wherever they sit in the (nested) property groups. */
+function hideProperties(groups, keys) {
+    groups.forEach(group => {
+        if (group.properties) {
+            group.properties = group.properties.filter(property => !keys.includes(property.key));
+        }
+        if (group.propertyGroups) {
+            hideProperties(group.propertyGroups, keys);
+        }
+    });
+}
+
+/**
+ * @param {object} values
+ * @param {Properties} defaultProperties
+ * @param {("web"|"desktop")} target
+ * @returns {Properties}
+ */
 export function getProperties(values, defaultProperties, target) {
-    // Do the values manipulation here to control the visibility of properties in Studio and Studio Pro conditionally.
-    /* Example
-    if (values.myProperty === "custom") {
-        delete defaultProperties.properties.myOtherProperty;
-    }
-    */
+    hideProperties(defaultProperties, values.role === "zone" ? ITEM_ONLY : ZONE_ONLY);
     return defaultProperties;
 }
 
-// /**
-//  * @param {Object} values
-//  * @returns {Problem[]} returns a list of problems.
-//  */
-// export function check(values) {
-//    /** @type {Problem[]} */
-//    const errors = [];
-//    // Add errors to the above array to throw errors in Studio and Studio Pro.
-//    /* Example
-//    if (values.myProperty !== "custom") {
-//        errors.push({
-//            property: `myProperty`,
-//            message: `The value of 'myProperty' is different of 'custom'.`,
-//            url: "https://github.com/myrepo/mywidget"
-//        });
-//    }
-//    */
-//    return errors;
-// }
+/**
+ * @param {Object} values
+ * @returns {Problem[]} returns a list of problems.
+ */
+export function check(values) {
+    /** @type {Problem[]} */
+    const errors = [];
+    if (!values.group || !values.group.trim()) {
+        errors.push({
+            property: "group",
+            message: "Set a group name; items and zones only work together within a group."
+        });
+    }
+    if (values.role === "item" && !values.itemKey) {
+        errors.push({ property: "itemKey", message: "An item needs an item key, e.g. toString($currentObject/ID)." });
+    }
+    if (values.role === "zone" && !values.onDrop) {
+        errors.push({
+            property: "onDrop",
+            severity: "warning",
+            message: "Without an On drop action, dropping does nothing."
+        });
+    }
+    return errors;
+}
+
+/**
+ * @param {Object} values
+ * @param {("web"|"desktop")} platform
+ * @returns {string}
+ */
+export function getCustomCaption(values, platform) {
+    return `Sortable DnD (${values.role === "zone" ? "zone" : "item"})`;
+}
 
 // /**
 //  * @param {object} values

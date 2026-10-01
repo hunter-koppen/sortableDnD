@@ -1,24 +1,42 @@
 ## SortableDnD
-[My widget description]
+
+Drag items between and within lists in Mendix — for example cards between kanban lanes — while the lists
+themselves stay ordinary Mendix widgets (galleries, list views) that keep loading, paging and filtering their own data.
+The widget only adds dragging and dropping; on drop it calls your action with what was dropped where.
 
 ## Features
-[feature highlights]
+
+- One widget, two roles: **Item** (draggable) and **Zone** (drop target).
+- **Attach to (CSS selector):** instead of wrapping content, attach to the closest ancestor that matches a selector
+  (e.g. `.kbn-card`, `.kbn-lane`). Adds drag and drop to an existing page without moving any widgets.
+- **Groups:** items only drop into zones with the same group name.
+- Drop position indicator (vertical or horizontal lists) and auto-scroll of scrollable lists/boards while dragging.
+- Works across widget instances: an item in one gallery item can be dropped on a zone in another.
+- Native HTML5 drag and drop, no runtime dependencies.
 
 ## Usage
-[step by step instructions]
 
-## Demo project
-[link to sandbox]
+1. Put a **Zone** in (or around) each list, e.g. in the template of a gallery of lanes.
+    - *Zone key*: identifies the zone, e.g. `toString($currentObject/StatusID)`.
+    - *On drop*: a microflow/nanoflow. Map the action variables to its parameters:
+        - `draggedKey` — item key of the dragged item
+        - `fromZoneKey` — zone key it came from (empty when it was not in a zone)
+        - `beforeKey` — item key it was dropped in front of (empty = at the end)
+        - `newIndex` — 0-based position among the items currently shown in the zone, without the dragged item
+2. Put an **Item** in each list item, e.g. in the gallery's item template.
+    - *Item key*: unique key, e.g. `toString($currentObject/ID)`. Your drop action looks the object up by this key —
+      apply entity access in that action (or scope the retrieve), since the key comes from the browser.
+3. Give items and zones the same **Group**.
+4. Optional: set *Attach to* on both (e.g. `.my-card` / `.my-lane`) to leave the existing content where it is.
 
-## Issues, suggestions and feature requests
-[link to GitHub issues]
+Styling hooks: `.sortablednd-item`, `.sortablednd-dragging`, `.sortablednd-zone.sortablednd-over`,
+`.sortablednd-insert-before`, `.sortablednd-insert-end`; indicator colour via `--sortablednd-indicator`.
 
-## Development and contribution
+Limitations: mouse/trackpad only (HTML5 drag and drop has no touch support in most browsers); no keyboard dragging.
 
-1. Install NPM package dependencies by using: `npm install`. If you use NPM v7.x.x, which can be checked by executing `npm -v`, execute: `npm install --legacy-peer-deps`.
-1. Run `npm start` to watch for code changes. On every change:
-    - the widget will be bundled;
-    - the bundle will be included in a `dist` folder in the root directory of the project;
-    - the bundle will be included in the `deployment` and `widgets` folder of the Mendix test project.
+## Development
 
-[specify contribution]
+1. `npm install`
+2. `npm run build` bundles the widget and copies the `.mpk` into the Mendix project's `widgets` folder
+   (`config.projectPath` in `package.json`). `npm start` does the same on every change.
+3. `npm run lint` before committing.
