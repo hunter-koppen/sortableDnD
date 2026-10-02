@@ -25,7 +25,7 @@ function useTargetElement(targetSelector, wrapperRef, anchorRef) {
 }
 
 export function SortableDnD(props) {
-    const { role, group, targetSelector, content, orientation, onDrop } = props;
+    const { role, group, targetSelector, content, orientation, optimisticMove, onDrop } = props;
     const wrapperRef = useRef(null);
     const anchorRef = useRef(null);
     const selector = targetSelector ? targetSelector.trim() : "";
@@ -34,6 +34,7 @@ export function SortableDnD(props) {
 
     useSortableItem(role === "item" ? element : null, {
         itemKey: props.itemKey ? props.itemKey.value : undefined,
+        sortValue: props.sortValue && props.sortValue.value ? props.sortValue.value.toString() : undefined,
         group,
         disabled
     });
@@ -42,6 +43,7 @@ export function SortableDnD(props) {
         group,
         disabled,
         orientation,
+        optimistic: optimisticMove,
         onDrop
     });
 

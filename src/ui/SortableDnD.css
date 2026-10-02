@@ -37,3 +37,12 @@
     outline: 2px dashed var(--sortablednd-indicator, var(--brand-primary, #264ae5));
     outline-offset: -2px;
 }
+
+/* Optimistic move: the original stays hidden and a copy shows at the new place until the lists refresh. */
+.sortablednd-moved-away {
+    display: none !important;
+}
+
+.sortablednd-placeholder {
+    pointer-events: none;
+}

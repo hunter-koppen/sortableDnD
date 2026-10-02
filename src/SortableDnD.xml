@@ -26,6 +26,11 @@
                     <description>Unique key of this item, passed to the zone's On drop action (e.g. toString($currentObject/ID)).</description>
                     <returnType type="String"/>
                 </property>
+                <property key="sortValue" type="expression" required="false">
+                    <caption>Sort value</caption>
+                    <description>Optional. Current sort value of this item (e.g. $currentObject/SortKey). When set, the zone passes a new sort value between the neighbours at the drop position (newSortValue).</description>
+                    <returnType type="Decimal"/>
+                </property>
                 <property key="zoneKey" type="expression" required="false">
                     <caption>Zone key</caption>
                     <description>Key of this zone, passed to the On drop action as the source zone of the dragged item.</description>
@@ -54,6 +59,10 @@
                         <enumerationValue key="horizontal">Horizontal</enumerationValue>
                     </enumerationValues>
                 </property>
+                <property key="optimisticMove" type="boolean" defaultValue="true">
+                    <caption>Move immediately</caption>
+                    <description>Zone only. Show the dropped item at its new place right away, until the lists refresh with the result of the On drop action (undone after 8 seconds when nothing refreshes). The list must be a flex or grid container.</description>
+                </property>
             </propertyGroup>
         </propertyGroup>
         <propertyGroup caption="Events">
@@ -64,8 +73,10 @@
                     <actionVariables>
                         <actionVariable key="draggedKey" type="String" caption="Item key of the dragged item"/>
                         <actionVariable key="fromZoneKey" type="String" caption="Zone key the item was dragged from (empty when it was not in a zone)"/>
+                        <actionVariable key="afterKey" type="String" caption="Item key of the item it was dropped after (empty = at the start)"/>
                         <actionVariable key="beforeKey" type="String" caption="Item key of the item it was dropped before (empty = at the end)"/>
                         <actionVariable key="newIndex" type="Integer" caption="0-based position in this zone among the items currently shown, without the dragged item"/>
+                        <actionVariable key="newSortValue" type="Decimal" caption="Sort value between the neighbours: average of both, item below - 1, item above + 1, or 0 when the zone is empty (needs Sort value on the items)"/>
                     </actionVariables>
                 </property>
             </propertyGroup>

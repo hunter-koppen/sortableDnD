@@ -46,8 +46,8 @@
  * @param {("web"|"desktop")} target
  * @returns {Properties}
  */
-const ITEM_ONLY = ["itemKey"];
-const ZONE_ONLY = ["zoneKey", "orientation", "onDrop"];
+const ITEM_ONLY = ["itemKey", "sortValue"];
+const ZONE_ONLY = ["zoneKey", "orientation", "optimisticMove", "onDrop"];
 
 /** Removes the given property keys wherever they sit in the (nested) property groups. */
 function hideProperties(groups, keys) {

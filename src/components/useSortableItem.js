@@ -1,11 +1,12 @@
 import { CLASS, endDrag, startDrag } from "./dragState";
 import { setDataAttributes, setDraggable } from "./dom";
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { clearPendingMove } from "./optimistic";
 
 /**
  * Makes `element` draggable. Pass `null` to do nothing (used when the widget is a zone).
  */
-export function useSortableItem(element, { itemKey, group, disabled }) {
+export function useSortableItem(element, { itemKey, sortValue, group, disabled }) {
     const latest = useRef({ itemKey, group, disabled });
     useLayoutEffect(() => {
         latest.current = { itemKey, group, disabled };
@@ -13,10 +14,14 @@ export function useSortableItem(element, { itemKey, group, disabled }) {
 
     useEffect(() => {
         if (element) {
-            setDataAttributes(element, { sortableKey: itemKey || "", sortableGroup: group });
+            setDataAttributes(element, {
+                sortableKey: itemKey || "",
+                sortableSort: sortValue === undefined ? undefined : sortValue,
+                sortableGroup: group
+            });
             setDraggable(element, !disabled && !!itemKey);
         }
-    }, [element, itemKey, group, disabled]);
+    }, [element, itemKey, sortValue, group, disabled]);
 
     useEffect(() => {
         if (!element) {
@@ -25,6 +30,7 @@ export function useSortableItem(element, { itemKey, group, disabled }) {
         element.classList.add(CLASS.item);
 
         const onDragStart = e => {
+            clearPendingMove();
             const { itemKey: key, group: itemGroup, disabled: isDisabled } = latest.current;
             if (isDisabled || !key) {
                 e.preventDefault();
@@ -61,7 +67,7 @@ export function useSortableItem(element, { itemKey, group, disabled }) {
             element.removeEventListener("dragend", onDragEnd);
             element.classList.remove(CLASS.item, CLASS.dragging);
             setDraggable(element, undefined);
-            setDataAttributes(element, { sortableKey: undefined, sortableGroup: undefined });
+            setDataAttributes(element, { sortableKey: undefined, sortableSort: undefined, sortableGroup: undefined });
         };
     }, [element]);
 }

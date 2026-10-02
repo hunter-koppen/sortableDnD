@@ -30,11 +30,36 @@ export function endDrag() {
     stopAutoScroll();
 }
 
-export function clearIndicators() {
-    document.querySelectorAll(`.${CLASS.insertBefore}`).forEach(el => el.classList.remove(CLASS.insertBefore));
-    document
-        .querySelectorAll(`.${CLASS.over}, .${CLASS.insertEnd}`)
-        .forEach(el => el.classList.remove(CLASS.over, CLASS.insertEnd));
+// --- Drop indicator ----------------------------------------------------------------------------
+// Only touch the DOM when the indicated position changes: dragover fires many times per second and
+// every class change forces the browser to restyle the (large) page.
+
+let indicator = { zone: null, before: null };
+
+export function showIndicator(zone, before) {
+    if (indicator.zone === zone && indicator.before === before) {
+        return;
+    }
+    clearIndicators();
+    zone.classList.add(CLASS.over);
+    if (before) {
+        before.classList.add(CLASS.insertBefore);
+    } else {
+        zone.classList.add(CLASS.insertEnd);
+    }
+    indicator = { zone, before };
+}
+
+export function clearIndicators(onlyZone) {
+    const { zone, before } = indicator;
+    if (!zone || (onlyZone && zone !== onlyZone)) {
+        return;
+    }
+    zone.classList.remove(CLASS.over, CLASS.insertEnd);
+    if (before) {
+        before.classList.remove(CLASS.insertBefore);
+    }
+    indicator = { zone: null, before: null };
 }
 
 // --- Auto-scroll -------------------------------------------------------------------------------
@@ -46,6 +71,7 @@ const MAX_SPEED_PX = 18;
 
 let pointer = null;
 let frame = 0;
+let scrollParentsCache = new WeakMap();
 
 function onDocumentDragOver(e) {
     pointer = { x: e.clientX, y: e.clientY, target: e.target };
@@ -55,22 +81,34 @@ function speed(distanceToEdge) {
     return Math.ceil(MAX_SPEED_PX * (1 - Math.max(distanceToEdge, 0) / EDGE_PX));
 }
 
-function isScrollable(el, axis) {
-    const style = window.getComputedStyle(el);
-    const overflow = axis === "y" ? style.overflowY : style.overflowX;
-    if (overflow !== "auto" && overflow !== "scroll") {
-        return false;
+/** Scrollable ancestors of `target` with the axes they scroll on; styles do not change during a drag. */
+function scrollParents(target) {
+    let result = scrollParentsCache.get(target);
+    if (!result) {
+        result = [];
+        for (let el = target; el && el !== document.body; el = el.parentElement) {
+            const style = window.getComputedStyle(el);
+            const y = /(auto|scroll)/.test(style.overflowY);
+            const x = /(auto|scroll)/.test(style.overflowX);
+            if (x || y) {
+                result.push({ el, x, y });
+            }
+        }
+        scrollParentsCache.set(target, result);
     }
-    return axis === "y" ? el.scrollHeight > el.clientHeight : el.scrollWidth > el.clientWidth;
+    return result;
 }
 
 function tick() {
     if (pointer && pointer.target instanceof Element) {
         let scrolledX = false;
         let scrolledY = false;
-        for (let el = pointer.target; el && el !== document.body && !(scrolledX && scrolledY); el = el.parentElement) {
+        for (const { el, x, y } of scrollParents(pointer.target)) {
+            if (scrolledX && scrolledY) {
+                break;
+            }
             const rect = el.getBoundingClientRect();
-            if (!scrolledY && isScrollable(el, "y")) {
+            if (!scrolledY && y && el.scrollHeight > el.clientHeight) {
                 if (pointer.y < rect.top + EDGE_PX) {
                     el.scrollTop -= speed(pointer.y - rect.top);
                     scrolledY = true;
@@ -79,7 +117,7 @@ function tick() {
                     scrolledY = true;
                 }
             }
-            if (!scrolledX && isScrollable(el, "x")) {
+            if (!scrolledX && x && el.scrollWidth > el.clientWidth) {
                 if (pointer.x < rect.left + EDGE_PX) {
                     el.scrollLeft -= speed(pointer.x - rect.left);
                     scrolledX = true;
@@ -95,6 +133,7 @@ function tick() {
 
 function startAutoScroll() {
     stopAutoScroll();
+    scrollParentsCache = new WeakMap();
     document.addEventListener("dragover", onDocumentDragOver, true);
     frame = window.requestAnimationFrame(tick);
 }
