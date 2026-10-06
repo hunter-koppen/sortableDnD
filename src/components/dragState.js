@@ -5,15 +5,35 @@ export const CLASS = {
     item: "sortablednd-item",
     zone: "sortablednd-zone",
     dragging: "sortablednd-dragging",
+    collapsed: "sortablednd-collapsed",
+    active: "sortablednd-drag-active",
     over: "sortablednd-over",
     insertBefore: "sortablednd-insert-before",
+    insertAfter: "sortablednd-insert-after",
     insertEnd: "sortablednd-insert-end"
 };
 
-let activeDrag = null; // { key, group, fromZoneKey, element }
+const SPACE_VAR = "--sortablednd-space";
+
+let activeDrag = null; // { key, group, fromZoneKey, element, zone, slot, size }
 
 export function getActiveDrag() {
     return activeDrag;
+}
+
+/**
+ * The items that belong directly to `zone` (not to a zone nested inside it), in DOM order,
+ * without `dragged`.
+ */
+export function zoneItems(zone, group, dragged) {
+    return Array.from(zone.querySelectorAll(`.${CLASS.item}`)).filter(
+        item =>
+            item !== dragged &&
+            item.dataset.sortableGroup === group &&
+            item.dataset.sortableKey &&
+            item.parentElement &&
+            item.parentElement.closest(`.${CLASS.zone}`) === zone
+    );
 }
 
 export function startDrag(drag) {
@@ -21,45 +41,92 @@ export function startDrag(drag) {
     startAutoScroll();
 }
 
-export function endDrag() {
-    if (activeDrag && activeDrag.element) {
-        activeDrag.element.classList.remove(CLASS.dragging);
+/**
+ * Called once the browser has captured the drag image: take the dragged item out of its list and open a gap of
+ * the same size in its place. Both happen before transitions are switched on, so nothing visibly moves yet; from
+ * then on the other items slide aside wherever the item would land.
+ */
+export function liftDraggedItem(drag) {
+    if (drag !== activeDrag) {
+        return; // the drag already ended
     }
+    drag.element.classList.add(CLASS.dragging);
+    drag.slot.classList.add(CLASS.collapsed);
+    if (drag.zone) {
+        const all = zoneItems(drag.zone, drag.group, null);
+        showIndicator(
+            drag.zone,
+            all.filter(item => item !== drag.element),
+            all.indexOf(drag.element)
+        );
+    }
+    document.documentElement.getBoundingClientRect(); // apply the layout above before the transition class
+    document.documentElement.classList.add(CLASS.active);
+}
+
+export function endDrag() {
+    const drag = activeDrag;
     activeDrag = null;
+    // Without transitions the gap closes at once, so it does not briefly add to the optimistic copy on a drop.
+    document.documentElement.classList.remove(CLASS.active);
+    if (drag) {
+        drag.element.classList.remove(CLASS.dragging);
+        drag.slot.classList.remove(CLASS.collapsed);
+    }
     clearIndicators();
     stopAutoScroll();
 }
 
 // --- Drop indicator ----------------------------------------------------------------------------
+// A gap the size of the dragged item where it will land: a margin before the item it goes in front of, after the
+// last item when it goes last, or at the end of an empty zone.
 // Only touch the DOM when the indicated position changes: dragover fires many times per second and
 // every class change forces the browser to restyle the (large) page.
 
-let indicator = { zone: null, before: null };
+let indicator = { zone: null, before: null, after: null };
 
-export function showIndicator(zone, before) {
-    if (indicator.zone === zone && indicator.before === before) {
+/**
+ * @param zone  the zone the item would be dropped in
+ * @param items the zone's items in order, without the dragged item
+ * @param index the position the dragged item would get within `items`
+ */
+export function showIndicator(zone, items, index) {
+    const before = items[index] || null;
+    const after = before ? null : items[items.length - 1] || null;
+    if (indicator.zone === zone && indicator.before === before && indicator.after === after) {
         return;
     }
     clearIndicators();
+    const size = activeDrag && activeDrag.size;
+    if (size) {
+        const horizontal = zone.dataset.sortableOrientation === "horizontal";
+        zone.style.setProperty(SPACE_VAR, `${horizontal ? size.width : size.height}px`);
+    }
     zone.classList.add(CLASS.over);
     if (before) {
         before.classList.add(CLASS.insertBefore);
+    } else if (after) {
+        after.classList.add(CLASS.insertAfter);
     } else {
         zone.classList.add(CLASS.insertEnd);
     }
-    indicator = { zone, before };
+    indicator = { zone, before, after };
 }
 
 export function clearIndicators(onlyZone) {
-    const { zone, before } = indicator;
+    const { zone, before, after } = indicator;
     if (!zone || (onlyZone && zone !== onlyZone)) {
         return;
     }
     zone.classList.remove(CLASS.over, CLASS.insertEnd);
+    zone.style.removeProperty(SPACE_VAR);
     if (before) {
         before.classList.remove(CLASS.insertBefore);
     }
-    indicator = { zone: null, before: null };
+    if (after) {
+        after.classList.remove(CLASS.insertAfter);
+    }
+    indicator = { zone: null, before: null, after: null };
 }
 
 // --- Auto-scroll -------------------------------------------------------------------------------

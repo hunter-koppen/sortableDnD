@@ -1,25 +1,14 @@
-import { CLASS, clearIndicators, endDrag, getActiveDrag, showIndicator } from "./dragState";
+import { CLASS, clearIndicators, endDrag, getActiveDrag, showIndicator, zoneItems } from "./dragState";
 import { applyOptimisticMove, settlePendingMove } from "./optimistic";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import Big from "big.js";
 import { setDataAttributes } from "./dom";
 
 /**
- * The items that belong directly to this zone (not to a zone nested inside it), in DOM order,
- * without the item that is being dragged.
+ * Where a drop at `point` lands: the items around it and the index among the items without the dragged one.
+ * Measured on the live layout, gap included: the items below the gap have moved down with it, so the pointer
+ * stays on the same side of their middle and the position does not flip back and forth.
  */
-function zoneItems(zone, group, dragged) {
-    return Array.from(zone.querySelectorAll(`.${CLASS.item}`)).filter(
-        item =>
-            item !== dragged &&
-            item.dataset.sortableGroup === group &&
-            item.dataset.sortableKey &&
-            item.parentElement &&
-            item.parentElement.closest(`.${CLASS.zone}`) === zone
-    );
-}
-
-/** Where a drop at `point` lands: the items around it and the index among the items without the dragged one. */
 function dropTarget(zone, drag, point, orientation) {
     const items = zoneItems(zone, drag.group, drag.element);
     let index = items.findIndex(item => {
@@ -105,7 +94,8 @@ export function useSortableZone(element, { zoneKey, group, disabled, orientation
             frame = 0;
             const drag = accepts();
             if (drag && point) {
-                showIndicator(element, dropTarget(element, drag, point, latest.current.orientation).before);
+                const { items, index } = dropTarget(element, drag, point, latest.current.orientation);
+                showIndicator(element, items, index);
             }
         };
 

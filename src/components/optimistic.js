@@ -3,27 +3,14 @@
 // Mendix/React is moved — so the next real render simply takes over. Needs the list container to be a
 // flex or grid container (which is what decides whether `order` has any effect).
 
+import { listEntryOf } from "./dom";
+
 const MOVED_AWAY = "sortablednd-moved-away";
 const PLACEHOLDER = "sortablednd-placeholder";
 const TIMEOUT_MS = 8000; // safety net: undo the preview when nothing ever refreshes
 const SETTLE_MS = 1500; // after the action finished: the refresh should follow quickly, or nothing changed
 
 let pending = null;
-
-function isLayoutContainer(el) {
-    const display = window.getComputedStyle(el).display;
-    return display.includes("flex") || display.includes("grid");
-}
-
-/** The nearest flex/grid ancestor of `item` and the child of it that contains `item` (the list entry). */
-function listEntryOf(item) {
-    for (let child = item, parent = item.parentElement; parent; child = parent, parent = parent.parentElement) {
-        if (isLayoutContainer(parent)) {
-            return { container: parent, entry: child };
-        }
-    }
-    return null;
-}
 
 export function clearPendingMove() {
     if (!pending) {

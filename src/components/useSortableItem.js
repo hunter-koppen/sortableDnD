@@ -1,5 +1,5 @@
-import { CLASS, endDrag, startDrag } from "./dragState";
-import { setDataAttributes, setDraggable } from "./dom";
+import { CLASS, endDrag, liftDraggedItem, startDrag } from "./dragState";
+import { setDataAttributes, setDraggable, slotOf, slotSize } from "./dom";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { clearPendingMove } from "./optimistic";
 
@@ -39,24 +39,30 @@ export function useSortableItem(element, { itemKey, sortValue, group, disabled }
             // A nested item handles its own drag; do not let an outer item take over.
             e.stopPropagation();
 
-            const zone = element.parentElement && element.parentElement.closest(`.${CLASS.zone}`);
-            startDrag({
+            const closestZone = element.parentElement && element.parentElement.closest(`.${CLASS.zone}`);
+            const zone = closestZone && closestZone.dataset.sortableGroup === itemGroup ? closestZone : null;
+            const slot = slotOf(element, zone);
+            const drag = {
                 key,
                 group: itemGroup,
                 element,
-                fromZoneKey: zone && zone.dataset.sortableGroup === itemGroup ? zone.dataset.sortableZoneKey || "" : ""
-            });
+                fromZoneKey: zone ? zone.dataset.sortableZoneKey || "" : "",
+                zone,
+                slot,
+                size: slotSize(slot)
+            };
+            startDrag(drag);
 
             e.dataTransfer.effectAllowed = "move";
             e.dataTransfer.setData("text/plain", key); // Firefox only starts a drag when data is set
             const rect = element.getBoundingClientRect();
             e.dataTransfer.setDragImage(element, e.clientX - rect.left, e.clientY - rect.top);
-            // Add the class after the browser captured the drag image, so the image is not faded.
-            window.requestAnimationFrame(() => element.classList.add(CLASS.dragging));
+            // Hide the item after the browser captured the drag image (and not during dragstart, which would make
+            // Chrome cancel the drag).
+            window.requestAnimationFrame(() => liftDraggedItem(drag));
         };
 
         const onDragEnd = () => {
-            element.classList.remove(CLASS.dragging);
             endDrag();
         };
 

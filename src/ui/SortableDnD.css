@@ -1,4 +1,3 @@
-/* Indicator colour; override with --sortablednd-indicator on any ancestor. */
 .sortablednd-item[draggable="true"] {
     cursor: grab;
 }
@@ -11,31 +10,58 @@
     opacity: 0.4;
 }
 
+/* While dragging, the dragged item leaves its list (its place shows as the gap below until the pointer moves). */
+.sortablednd-collapsed {
+    display: none !important;
+}
+
 .sortablednd-anchor {
     display: none;
 }
 
-/* Drop position: a line just before the item the dragged item will be placed in front of… */
+/* Drop position: the items make room, a gap the size of the dragged item (--sortablednd-space, set during a
+   drag) in front of the item it will be placed before… */
 .sortablednd-zone[data-sortable-orientation="vertical"] .sortablednd-insert-before {
-    box-shadow: 0 -3px 0 0 var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+    margin-top: var(--sortablednd-space, 0px);
 }
 
 .sortablednd-zone[data-sortable-orientation="horizontal"] .sortablednd-insert-before {
-    box-shadow: -3px 0 0 0 var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+    margin-left: var(--sortablednd-space, 0px);
 }
 
-/* …or, when it goes last, a line along the end of the zone. */
-.sortablednd-zone[data-sortable-orientation="vertical"].sortablednd-insert-end {
-    box-shadow: inset 0 -3px 0 0 var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+/* …after the last item when it goes last… */
+.sortablednd-zone[data-sortable-orientation="vertical"] .sortablednd-insert-after {
+    margin-bottom: var(--sortablednd-space, 0px);
 }
 
-.sortablednd-zone[data-sortable-orientation="horizontal"].sortablednd-insert-end {
-    box-shadow: inset -3px 0 0 0 var(--sortablednd-indicator, var(--brand-primary, #264ae5));
+.sortablednd-zone[data-sortable-orientation="horizontal"] .sortablednd-insert-after {
+    margin-right: var(--sortablednd-space, 0px);
 }
 
-.sortablednd-zone.sortablednd-over {
-    outline: 2px dashed var(--sortablednd-indicator, var(--brand-primary, #264ae5));
-    outline-offset: -2px;
+/* …or at the end of a zone without items. */
+.sortablednd-zone.sortablednd-insert-end::after {
+    content: "";
+    display: block;
+    flex: none;
+}
+
+.sortablednd-zone[data-sortable-orientation="vertical"].sortablednd-insert-end::after {
+    height: var(--sortablednd-space, 0px);
+}
+
+.sortablednd-zone[data-sortable-orientation="horizontal"].sortablednd-insert-end::after {
+    width: var(--sortablednd-space, 0px);
+}
+
+/* Slide aside only during a drag, so the gap closes at once when the item is dropped into it. */
+.sortablednd-drag-active .sortablednd-zone .sortablednd-item {
+    transition: margin 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sortablednd-drag-active .sortablednd-zone .sortablednd-item {
+        transition: none;
+    }
 }
 
 /* Optimistic move: the original stays hidden and a copy shows at the new place until the lists refresh. */

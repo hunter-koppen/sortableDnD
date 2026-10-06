@@ -10,7 +10,8 @@ The widget only adds dragging and dropping; on drop it calls your action with wh
 - **Attach to (CSS selector):** instead of wrapping content, attach to the closest ancestor that matches a selector
   (e.g. `.kbn-card`, `.kbn-lane`). Adds drag and drop to an existing page without moving any widgets.
 - **Groups:** items only drop into zones with the same group name.
-- Drop position indicator (vertical or horizontal lists) and auto-scroll of scrollable lists/boards while dragging.
+- While dragging, the dragged item leaves its list and the other items slide aside to open a gap where it will
+  land (vertical or horizontal lists), plus auto-scroll of scrollable lists/boards.
 - Works across widget instances: an item in one gallery item can be dropped on a zone in another.
 - Native HTML5 drag and drop, no runtime dependencies.
 
@@ -29,8 +30,11 @@ The widget only adds dragging and dropping; on drop it calls your action with wh
 3. Give items and zones the same **Group**.
 4. Optional: set *Attach to* on both (e.g. `.my-card` / `.my-lane`) to leave the existing content where it is.
 
-Styling hooks: `.sortablednd-item`, `.sortablednd-dragging`, `.sortablednd-zone.sortablednd-over`,
-`.sortablednd-insert-before`, `.sortablednd-insert-end`; indicator colour via `--sortablednd-indicator`.
+Styling hooks: `.sortablednd-item`, `.sortablednd-dragging`, `.sortablednd-collapsed` (the hidden place of the
+dragged item), `.sortablednd-zone.sortablednd-over`, and the gap: `.sortablednd-insert-before` /
+`.sortablednd-insert-after` on an item, `.sortablednd-insert-end` on an empty zone; its size is in
+`--sortablednd-space`. The dragged item's place only closes completely when its list is a flex/grid container;
+otherwise its (empty) list entry stays behind.
 
 Limitations: mouse/trackpad only (HTML5 drag and drop has no touch support in most browsers); no keyboard dragging.
 
